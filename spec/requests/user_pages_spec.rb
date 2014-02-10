@@ -80,5 +80,22 @@ describe "User pages" do
         it {should have_link("Sign out")}
       end
     end
+
+    describe "edit user" do
+      let(:user) {FactoryGirl.create(:user)}
+      before do
+        visit edit_user_path(user)
+      end
+      describe "page" do
+      it {should have_content("Update your profile")}
+      it {should have_title("Edit user")}
+      it {should have_link("change", href:"http://gravatar.com/emails")}
+      end
+
+      describe "with invalid information" do
+        before {click_button("Save changes")}
+        it {should have_error_message}
+      end
+    end
   end
 end
