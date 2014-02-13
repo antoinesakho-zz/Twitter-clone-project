@@ -10,6 +10,7 @@ class User < ActiveRecord::Base
                        :confirmation => true,
                        :length => { :within => 6..40 }
   has_secure_password
+  has_many :microposts, dependent: :destroy
    
 
   def User.new_remember_token
