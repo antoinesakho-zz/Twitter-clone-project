@@ -19,6 +19,28 @@ describe "Authentication" do
 						end
 				end
 
+						describe "for signed-in users" do
+						  let(:user) { FactoryGirl.create(:user) }
+						  before { sign_in user, no_capybara: true }
+
+						  describe "using a 'new' action" do
+						    before { get new_user_path }      
+						    specify { response.should redirect_to(root_path) }
+						  end
+
+						  describe "using a 'create' action" do
+						    before do
+						      @user_new = {name: "Example User", 
+						                   email: "user@example.com", 
+						                   password: "foobar", 
+						                   password_confirmation: "foobar"} 
+						      post users_path, user: @user_new 
+						    end
+
+						    specify { response.should redirect_to(root_path) }
+						  end
+						end  
+
 				describe "with valid information" do 
 					let(:user) {FactoryGirl.create(:user)}
 					before { sign_in user }
@@ -67,6 +89,16 @@ describe "Authentication" do
       end
     end
 
+    describe "as admin user" do
+    	let(:user) {FactoryGirl.create(:admin)}
+
+    	before {sign_in user, no_capybara: true}
+
+  describe "should not be able to delete themselves" do
+  it { expect { delete user_path(user)}.not_to change(User, :count) }
+			end
+   end
+
 
 		describe "as wrong user" do
 			let(:user) {FactoryGirl.create(:user)}
@@ -88,6 +120,13 @@ describe "Authentication" do
 			describe "for non-signed in users" do
 				let(:user) {FactoryGirl.create(:user)}
 
+				describe "they should not see signed-in menu bar" do
+						it {should_not have_link("Users", href: users_path)}
+						it {should_not have_link("Profile", href: user_path(user))}
+						it {should_not have_link("Sign out", href: signout_path)}
+						it {should_not have_link("Settings", href: edit_user_path(user))}
+					end
+
 				describe "visiting the user index" do
 					before { visit users_path}
 					it {should have_title("Sign in")}
@@ -96,9 +135,7 @@ describe "Authentication" do
 				describe "when attempting to visit a protected page" do
 					before do
 						visit edit_user_path(user)
-						fill_in "Email", with: user.email
-						fill_in "Password", with: user.password
-						click_button "Sign in"
+						sign_in user
 					end
 
 					describe "afer signing in" do
